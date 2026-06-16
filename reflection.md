@@ -154,21 +154,17 @@ Paste output của `generate_improvement_log()`:
 ### CI/CD Integration
 
 **Câu 1: Khi nào chạy `run_regression()` trong production system?**
-> *Mô tả CI/CD integration point (ví dụ: trước mỗi merge to main, sau mỗi prompt change, etc.):*
+> Chạy trong CI trước khi merge vào main (mỗi PR), sau mỗi thay đổi prompt/retriever/index; có thể thêm nightly run để bắt drift.
 
 **Câu 2: Threshold regression 0.05 có phù hợp domain của bạn không?**
-> *Strict hơn hay loose hơn? Tại sao?*
+> Thường phù hợp cho baseline chung. Nếu domain rủi ro cao (compliance/finance) → strict hơn (0.02–0.03). Nếu domain chat không critical → có thể loose hơn.
 
 **Câu 3: Khi phát hiện regression — block deployment hay chỉ alert?**
-> *Your answer + giải thích trade-off:*
+> Block nếu regression xảy ra ở metric chính (đặc biệt faithfulness). Alert nếu regression nhỏ ở metric phụ hoặc do noise tạm thời, nhưng vẫn cần review.
 
 **Câu 4: Eval pipeline nên chạy ở đâu trong CI/CD flow?**
+> Code change → [Unit tests] → [Offline benchmark + run_regression] → [Staging/Canary + monitoring] → Deploy
 
-```
-Code change → [___] → [___] → [___] → Deploy
-              (bước 1)   (bước 2)   (bước 3)
-```
-> *Điền 3 bước eval vào flow trên:*
 
 ---
 
@@ -180,12 +176,9 @@ Theo bài giảng: Evaluate → Analyze → Improve → Augment (add to benchmar
 
 | Priority | Action | Metric sẽ improve | Expected impact |
 |----------|--------|-------------------|-----------------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-
-**Bạn sẽ thêm failure cases nào vào benchmark cho sprint tiếp theo?**
-> *List 2–3 cases mới cần thêm:*
+|1|	Cải thiện retrieval (hybrid search + tăng top-k + metadata filter)|Context Recall / Faithfulness|Giảm thiếu evidence → giảm bịa|
+|2|Thêm reranking (cross-encoder hoặc lexical rerank)|Context Precision / Relevance|Giảm nhiễu, tăng đúng trọng tâm|
+|3|Prompt theo checklist + self-check “đủ ý chưa?”|Completeness|Trả lời đầy đủ và có cấu trúc|
 
 ---
 
@@ -198,6 +191,6 @@ Theo bài giảng: Evaluate → Analyze → Improve → Augment (add to benchmar
 
 | Tiêu chí | Lý do chọn |
 |----------|------------|
-| Focus phù hợp vì... | |
-| CI/CD integration vì... | |
-| Team workflow vì... | |
+| Focus phù hợp vì... |RAGAS/DeepEval/TruLens có metric chuẩn + tích hợp retrieval/generation tốt hơn heuristic.|
+| CI/CD integration vì... |Có API/CLI rõ ràng để chạy regression, lưu artifacts, và gate deploy.|
+| Team workflow vì... |Dễ chuẩn hoá rubric, theo dõi history, debug failure theo dashboard/log.|
